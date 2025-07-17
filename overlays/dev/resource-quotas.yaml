@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: data-pipeline-quota
+  namespace: data-pipeline-dev
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 32Gi
+    limits.cpu: "16"
+    limits.memory: 64Gi
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ray-training-quota
+  namespace: ray-training-dev
+spec:
+  hard:
+    requests.cpu: "16"
+    requests.memory: 64Gi
+    limits.cpu: "32"
+    limits.memory: 128Gi
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: notebooks-quota
+  namespace: notebooks-dev
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 16Gi
+    limits.cpu: "8"
+    limits.memory: 32Gi
