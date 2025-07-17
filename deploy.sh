@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Configuration
 ENVIRONMENT=${1:-dev}
-REPO_URL=${2:-"https://github.com/YOUR-USERNAME/ray-gke-infrastructure.git"}
+REPO_URL=${2:-"https://github.com/jwnich/ray-gke-infrastructure.git"}
 TEMP_DIR="/tmp/ray-gke-deploy-$$"
 RAY_OPERATOR_VERSION="v1.1.1"
 
