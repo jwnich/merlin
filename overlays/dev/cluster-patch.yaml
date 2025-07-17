@@ -1,0 +1,37 @@
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: arima-training-cluster
+  namespace: ray-training-dev
+spec:
+  headGroupSpec:
+    template:
+      spec:
+        containers:
+        - name: ray-head
+          resources:
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+            requests:
+              cpu: "500m"
+              memory: "2Gi"
+  
+  workerGroupSpecs:
+  - replicas: 2
+    minReplicas: 0
+    maxReplicas: 8
+    groupName: cpu-workers
+    rayStartParams:
+      num-cpus: '4'
+    template:
+      spec:
+        containers:
+        - name: ray-worker
+          resources:
+            limits:
+              cpu: "4"
+              memory: "16Gi"
+            requests:
+              cpu: "1"
+              memory: "8Gi"
