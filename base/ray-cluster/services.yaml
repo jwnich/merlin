@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ray-dashboard-service
+  namespace: ray-training-dev
+spec:
+  selector:
+    app.kubernetes.io/name: kuberay
+    app.kubernetes.io/component: ray-head
+  ports:
+  - name: dashboard
+    port: 8265
+    targetPort: 8265
+  type: ClusterIP
