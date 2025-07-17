@@ -7,10 +7,9 @@ set -euo pipefail
 
 # Configuration
 ENVIRONMENT=${1:-dev}
-REPO_URL=${2:-"https://github.com/jwnich/ray-gke-infrastructure.git"}
+REPO_URL=${2:-"git@github.com:jwnich/ray-gke-infrastructure.git"}
 TEMP_DIR="/tmp/ray-gke-deploy-$$"
 RAY_OPERATOR_VERSION="v1.1.1"
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
