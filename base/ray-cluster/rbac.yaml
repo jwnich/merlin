@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ray-service-account
+  namespace: ray-training-dev
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ray-worker-role
+  namespace: ray-training-dev
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "patch", "watch", "create", "delete"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ray-worker-binding
+  namespace: ray-training-dev
+subjects:
+- kind: ServiceAccount
+  name: ray-service-account
+  namespace: ray-training-dev
+roleRef:
+  kind: Role
+  name: ray-worker-role
+  apiGroup: rbac.authorization.k8s.io
