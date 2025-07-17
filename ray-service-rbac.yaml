@@ -1,0 +1,73 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ray-service-operator-full
+rules:
+# Core API group
+- apiGroups: [""]
+  resources: 
+    - "pods"
+    - "services" 
+    - "endpoints"
+    - "events"
+    - "configmaps"
+    - "secrets"
+    - "namespaces"
+    - "serviceaccounts"
+    - "persistentvolumes"
+    - "persistentvolumeclaims"
+    - "nodes"
+  verbs: ["*"]
+# Apps API group
+- apiGroups: ["apps"]
+  resources: 
+    - "deployments"
+    - "replicasets" 
+    - "statefulsets"
+    - "daemonsets"
+  verbs: ["*"]
+# Batch API group  
+- apiGroups: ["batch"]
+  resources:
+    - "jobs"
+    - "cronjobs"
+  verbs: ["*"]
+# Ray API group
+- apiGroups: ["ray.io"]
+  resources: ["*"]
+  verbs: ["*"]
+# Networking
+- apiGroups: ["networking.k8s.io"]
+  resources: 
+    - "ingresses"
+    - "networkpolicies"
+  verbs: ["*"]
+# Coordination (for leader election)
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["*"]
+# RBAC (in case operator needs to manage service accounts)
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources:
+    - "roles"
+    - "rolebindings" 
+    - "clusterroles"
+    - "clusterrolebindings"
+  verbs: ["get", "list", "watch"]
+# Metrics
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ray-service-operator-full
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ray-service-operator-full
+subjects:
+- kind: ServiceAccount
+  name: ray-service
+  namespace: ray-system

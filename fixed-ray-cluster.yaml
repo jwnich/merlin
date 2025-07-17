@@ -1,0 +1,64 @@
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  labels:
+    app.kubernetes.io/component: ray-cluster
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/part-of: ray-gke-infrastructure
+    environment: dev
+  name: arima-training-cluster
+  namespace: ray-training-dev
+spec:
+  enableInTreeAutoscaling: true
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: "0.0.0.0"
+      num-cpus: "0"
+    serviceType: ClusterIP
+    template:
+      spec:
+        containers:
+        - name: ray-head
+          image: rayproject/ray:2.9.0-py310  # Added missing image
+          resources:
+            limits:
+              cpu: "2"
+              memory: 4Gi
+            requests:
+              cpu: 500m
+              memory: 2Gi
+          volumeMounts:  # Added volume mount for shared storage
+          - name: shared-storage
+            mountPath: /tmp/shared
+        serviceAccountName: ray-service-account
+        volumes:
+        - emptyDir:
+            sizeLimit: 5Gi
+          name: shared-storage
+  rayVersion: 2.9.0
+  workerGroupSpecs:
+  - groupName: cpu-workers
+    maxReplicas: 8
+    minReplicas: 0
+    rayStartParams:
+      num-cpus: "4"
+    replicas: 2
+    template:
+      spec:
+        containers:
+        - name: ray-worker
+          image: rayproject/ray:2.9.0-py310  # Added missing image
+          resources:
+            limits:
+              cpu: "4"
+              memory: 16Gi
+            requests:
+              cpu: "1"
+              memory: 8Gi
+          volumeMounts:  # Added volume mount for shared storage
+          - name: shared-storage
+            mountPath: /tmp/shared
+        volumes:
+        - emptyDir:
+            sizeLimit: 5Gi
+          name: shared-storage

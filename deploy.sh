@@ -68,6 +68,13 @@ install_ray_operator() {
     log_info "Waiting for Ray Operator to be ready..."
     kubectl wait --for=condition=available --timeout=300s deployment/kuberay-operator -n ray-system
     
+    # Update operator to use our service account
+    log_info "Configuring Ray Operator service account..."
+    kubectl patch deployment kuberay-operator -n ray-system -p '{"spec":{"template":{"spec":{"serviceAccountName":"ray-service-account"}}}}'
+    
+    # Wait for the patched operator to be ready
+    kubectl wait --for=condition=available --timeout=300s deployment/kuberay-operator -n ray-system
+    
     log_info "Ray Operator installed ✅"
 }
 
