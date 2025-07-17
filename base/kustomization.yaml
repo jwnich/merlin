@@ -2,8 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - namespaces     ← Directory name, NOT namespaces.yaml
-  - ray-cluster    ← Directory name, NOT ray-cluster.yaml
+  - namespaces
+  - ray-cluster
 
 commonLabels:
   app.kubernetes.io/part-of: ray-gke-infrastructure
