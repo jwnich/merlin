@@ -1,0 +1,79 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ray-cluster-test
+  namespace: ray-training-dev
+  labels:
+    app: ray-test
+spec:
+  template:
+    metadata:
+      labels:
+        app: ray-test
+    spec:
+      containers:
+      - name: ray-test
+        image: rayproject/ray:2.9.0-py310
+        command: ["/bin/bash"]
+        args:
+          - -c
+          - |
+            echo "🔌 Testing Ray cluster connection..."
+            
+            python -c "
+            import ray
+            import time
+            import numpy as np
+            from datetime import datetime
+            
+            print('📊 Starting Ray cluster test...')
+            print(f'🕒 Test started at: {datetime.now()}')
+            
+            # Connect to Ray cluster
+            ray.init(address='ray://arima-training-cluster-head-svc:10001')
+            print(f'✅ Connected to Ray cluster')
+            print(f'📈 Cluster resources: {ray.cluster_resources()}')
+            
+            # Test basic Ray functionality
+            @ray.remote
+            def compute_square(x):
+                time.sleep(0.1)  # Simulate some work
+                return x * x
+            
+            # Submit parallel tasks (similar to ARIMA bootstrap pattern)
+            print('🚀 Submitting 20 parallel tasks...')
+            start_time = time.time()
+            futures = [compute_square.remote(i) for i in range(20)]
+            results = ray.get(futures)
+            end_time = time.time()
+            
+            print(f'📊 Results: {results[:10]}... (showing first 10)')
+            print(f'⚡ Processing time: {end_time - start_time:.2f} seconds')
+            print(f'🎯 Tasks per second: {20 / (end_time - start_time):.1f}')
+            
+            # Test memory-intensive task (financial data simulation)
+            @ray.remote
+            def memory_test():
+                # Simulate loading financial dataset
+                data = np.random.normal(0, 1, (100000, 50))  # 100k rows, 50 features
+                return data.shape, data.nbytes / 1024 / 1024  # Shape and MB
+            
+            print('💾 Testing memory-intensive tasks...')
+            memory_futures = [memory_test.remote() for _ in range(3)]
+            memory_results = ray.get(memory_futures)
+            
+            for i, (shape, mb) in enumerate(memory_results):
+                print(f'   Task {i+1}: {shape} shape, {mb:.1f} MB')
+            
+            # Test autoscaling by submitting more tasks than workers
+            print('📈 Testing autoscaling with burst workload...')
+            burst_futures = [compute_square.remote(i) for i in range(50)]
+            burst_results = ray.get(burst_futures)
+            print(f'✅ Completed {len(burst_results)} tasks (may have triggered autoscaling)')
+            
+            ray.shutdown()
+            print('🎉 Ray cluster test completed successfully!')
+            print('✅ Your cluster is ready for ARIMA bootstrapping workloads!')
+            "
+      restartPolicy: Never
+  backoffLimit: 3
