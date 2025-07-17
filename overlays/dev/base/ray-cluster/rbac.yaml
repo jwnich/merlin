@@ -1,0 +1,128 @@
+# base/ray-cluster/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ray-service-account
+  namespace: ray-training-dev
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ray-worker-role
+  namespace: ray-training-dev
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "patch", "watch", "create", "delete"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ray-worker-binding
+  namespace: ray-training-dev
+subjects:
+- kind: ServiceAccount
+  name: ray-service-account
+  namespace: ray-training-dev
+roleRef:
+  kind: Role
+  name: ray-worker-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# base/ray-cluster/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ray-dashboard-service
+  namespace: ray-training-dev
+spec:
+  selector:
+    app.kubernetes.io/name: kuberay
+    app.kubernetes.io/component: ray-head
+  ports:
+  - name: dashboard
+    port: 8265
+    targetPort: 8265
+  type: ClusterIP
+
+---
+# base/ray-cluster/ray-cluster.yaml
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: arima-training-cluster
+  namespace: ray-training-dev
+spec:
+  rayVersion: '2.9.0'
+  enableInTreeAutoscaling: true
+  
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: '0.0.0.0'
+      num-cpus: '0'
+    template:
+      spec:
+        serviceAccountName: ray-service-account
+        containers:
+        - name: ray-head
+          image: rayproject/ray:2.9.0-py310
+          resources:
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+          ports:
+          - containerPort: 6379
+            name: gcs-server
+          - containerPort: 8265
+            name: dashboard
+          - containerPort: 10001
+            name: client
+          env:
+          - name: RAY_CLUSTER_NAME
+            value: "arima-training-cluster"
+          volumeMounts:
+          - name: shared-storage
+            mountPath: /tmp/ray-storage
+        volumes:
+        - name: shared-storage
+          emptyDir:
+            sizeLimit: 5Gi
+    serviceType: ClusterIP
+    
+  workerGroupSpecs:
+  - replicas: 1
+    minReplicas: 0
+    maxReplicas: 5
+    groupName: cpu-workers
+    rayStartParams:
+      num-cpus: '2'
+    template:
+      spec:
+        serviceAccountName: ray-service-account
+        containers:
+        - name: ray-worker
+          image: rayproject/ray:2.9.0-py310
+          resources:
+            limits:
+              cpu: "2"
+              memory: "8Gi"
+            requests:
+              cpu: "1"
+              memory: "4Gi"
+          env:
+          - name: RAY_CLUSTER_NAME
+            value: "arima-training-cluster"
+          volumeMounts:
+          - name: shared-storage
+            mountPath: /tmp/ray-storage
+        volumes:
+        - name: shared-storage
+          emptyDir:
+            sizeLimit: 5Gi
