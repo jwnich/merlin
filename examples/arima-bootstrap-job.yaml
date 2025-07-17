@@ -1,0 +1,92 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: arima-bootstrap-example
+  namespace: ray-training-dev
+  labels:
+    app: arima-example
+spec:
+  template:
+    metadata:
+      labels:
+        app: arima-example
+    spec:
+      containers:
+      - name: arima-bootstrap
+        image: rayproject/ray:2.9.0-py310
+        command: ["/bin/bash"]
+        args:
+          - -c
+          - |
+            pip install statsmodels pandas
+            
+            python -c "
+            import ray
+            import numpy as np
+            import pandas as pd
+            from statsmodels.tsa.arima.model import ARIMA
+            import time
+            
+            print('🎯 Starting ARIMA Bootstrap Example')
+            ray.init(address='ray://arima-training-cluster-head-svc:10001')
+            
+            # Generate sample financial time series
+            np.random.seed(42)
+            dates = pd.date_range('2020-01-01', periods=500, freq='D')
+            returns = np.random.normal(0.001, 0.02, len(dates))
+            prices = 100 * np.exp(np.cumsum(returns))
+            ts_data = pd.Series(prices, index=dates)
+            
+            print(f'📊 Generated time series: {len(ts_data)} observations')
+            
+            @ray.remote
+            def fit_bootstrap_arima(data, bootstrap_id, order=(1,1,1)):
+                start_time = time.time()
+                
+                # Bootstrap sample
+                sample = data.sample(n=len(data), replace=True).sort_index()
+                
+                try:
+                    model = ARIMA(sample, order=order)
+                    fitted = model.fit()
+                    
+                    return {
+                        'bootstrap_id': bootstrap_id,
+                        'aic': fitted.aic,
+                        'params': fitted.params.tolist(),
+                        'forecast': fitted.forecast(1)[0],
+                        'time': time.time() - start_time,
+                        'success': True
+                    }
+                except Exception as e:
+                    return {
+                        'bootstrap_id': bootstrap_id,
+                        'error': str(e),
+                        'time': time.time() - start_time,
+                        'success': False
+                    }
+            
+            # Run bootstrap ensemble
+            print('🚀 Running 25 bootstrap ARIMA models...')
+            futures = [fit_bootstrap_arima.remote(ts_data, i) for i in range(25)]
+            results = ray.get(futures)
+            
+            # Analysis
+            successful = [r for r in results if r['success']]
+            print(f'✅ Successful fits: {len(successful)}/25')
+            
+            if successful:
+                aics = [r['aic'] for r in successful]
+                forecasts = [r['forecast'] for r in successful]
+                times = [r['time'] for r in successful]
+                
+                print(f'📈 AIC range: {min(aics):.2f} - {max(aics):.2f}')
+                print(f'🔮 Forecast mean: {np.mean(forecasts):.2f} ± {np.std(forecasts):.2f}')
+                print(f'⚡ Average fit time: {np.mean(times):.2f}s')
+                print(f'🚀 Total parallel speedup achieved!')
+            
+            ray.shutdown()
+            print('🎉 ARIMA Bootstrap example completed!')
+            "
+      restartPolicy: Never
+  backoffLimit: 3
