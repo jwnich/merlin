@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data-pipeline-dev
+  labels:
+    environment: dev
+    workload-type: data-pipeline
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ray-training-dev
+  labels:
+    environment: dev
+    workload-type: ml-training
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: notebooks-dev
+  labels:
+    environment: dev
+    workload-type: interactive
