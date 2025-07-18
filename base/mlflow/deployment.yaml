@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow-server
+  labels:
+    app: mlflow-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mlflow-server
+  template:
+    metadata:
+      labels:
+        app: mlflow-server
+    spec:
+      containers:
+      - name: mlflow-server
+        image: python:3.9-slim
+        command: ["/bin/bash", "-c"]
+        args: 
+        - |
+          pip install mlflow[extras] psycopg2-binary
+          mlflow server --host 0.0.0.0 --port 5000 \
+            --backend-store-uri sqlite:////mlflow/mlflow.db \
+            --default-artifact-root /mlflow/artifacts
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: mlflow-storage
+          mountPath: /mlflow
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 1
+            memory: 2Gi
+      volumes:
+      - name: mlflow-storage
+        persistentVolumeClaim:
+          claimName: mlflow-storage
