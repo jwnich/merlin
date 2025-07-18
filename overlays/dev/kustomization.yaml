@@ -8,7 +8,7 @@ resources:
 patches:
   - path: ray-cluster-patch.yaml
   - path: notebooks-patch.yaml
-  - path: mlflow-patch.yaml- ray-cluster-patch.yaml
+  - path: mlflow-patch.yaml
 
 commonLabels:
   environment: dev
