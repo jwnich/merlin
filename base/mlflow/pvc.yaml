@@ -1,0 +1,11 @@
+yamlapiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mlflow-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard-rwo  # Use GKE's default
