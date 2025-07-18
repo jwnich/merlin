@@ -1,0 +1,11 @@
+yaml# Add to your existing JupyterHub configuration
+spec:
+  template:
+    spec:
+      containers:
+      - name: notebook
+        env:
+        - name: MLFLOW_TRACKING_URI
+          value: "http://mlflow-service.ray-training-dev.svc.cluster.local:5000"
+        - name: RAY_ADDRESS
+          value: "ray://ray-client-service.ray-training-dev.svc.cluster.local:10001"
