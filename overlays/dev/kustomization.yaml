@@ -7,6 +7,8 @@ resources:
 
 patchesStrategicMerge:
   - ray-cluster-patch.yaml
+  - notebooks-patch.yaml  # Add this line
+  - mlflow-patch.yaml     # Add this line
 
 commonLabels:
   environment: dev
@@ -14,3 +16,5 @@ commonLabels:
 images:
   - name: rayproject/ray
     newTag: 2.9.0-py310
+  - name: jupyter/datascience-notebook  # Add this if you want to pin notebook image
+    newTag: latest
