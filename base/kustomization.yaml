@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
   - namespaces
   - ray-cluster
+  - notebooks      # Add this line
+  - mlflow         # Add this line
 
 commonLabels:
   app.kubernetes.io/part-of: ray-gke-infrastructure
