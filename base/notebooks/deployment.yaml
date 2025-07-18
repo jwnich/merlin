@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyterhub
+  labels:
+    app: jupyterhub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jupyterhub
+  template:
+    metadata:
+      labels:
+        app: jupyterhub
+    spec:
+      containers:
+      - name: jupyterhub
+        image: jupyterhub/jupyterhub:4.0
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          pip install dockerspawner
+          jupyterhub -f /etc/jupyterhub/jupyterhub_config.py
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: config
+          mountPath: /etc/jupyterhub
+        - name: data
+          mountPath: /srv/jupyterhub
+        env:
+        - name: DOCKER_HOST
+          value: unix:///var/run/docker.sock
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 1
+            memory: 2Gi
+      volumes:
+      - name: config
+        configMap:
+          name: jupyterhub-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: jupyterhub-data
