@@ -5,10 +5,10 @@ resources:
   - ../../base
   - resource-quotas.yaml
 
-patchesStrategicMerge:
-  - ray-cluster-patch.yaml
-  - notebooks-patch.yaml  # Add this line
-  - mlflow-patch.yaml     # Add this line
+patches:
+  - path: ray-cluster-patch.yaml
+  - path: notebooks-patch.yaml
+  - path: mlflow-patch.yaml- ray-cluster-patch.yaml
 
 commonLabels:
   environment: dev
