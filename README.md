@@ -1,4 +1,4 @@
-# Ray GKE Infrastructure
+# Merlin Ray-GKE ML Platform Infrastructure
 
 GitOps-based infrastructure for running Ray clusters, Mage pipelines, and Jupyter notebooks on Google Kubernetes Engine (GKE).
 
